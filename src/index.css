@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+  .toggle.android { border-radius: 0px;}
+  .toggle.android .toggle-handle { border-radius: 0px; }
+
+  
