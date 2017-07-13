@@ -5,10 +5,7 @@ import './App.css';
 import Button from '../node_modules/react-bootstrap/lib/Button';
 import Navbar from '../node_modules/react-bootstrap/lib/Navbar';
 
-import Modal from '../node_modules/react-bootstrap/lib/Modal';
-import ModalHeader from '../node_modules/react-bootstrap/lib/ModalHeader';
-import ModalBody from '../node_modules/react-bootstrap/lib/ModalBody';
-import ModalTitle from '../node_modules/react-bootstrap/lib/ModalTitle';
+
 
 class Board extends Component {
 
@@ -16,12 +13,12 @@ class Board extends Component {
     constructor(){
         super();
         this.state = {
-            grid:["","","","","","","","","",], 
-            _PLAYER : 'X',
-            movesCounter : 0,
-            gameOver : false,
-            choosePlayer : true,
-            message : ''
+            grid:["","","O",
+                  "","","",
+                  "X","","",], 
+            winner: null,
+            minPlayer : 'O',
+            maxPlayer : 'X'
         }
 
 
@@ -30,116 +27,222 @@ class Board extends Component {
        this.isMoveValid = this.isMoveValid.bind(this);
        this.draw = this.draw.bind(this);
        this.reset = this.reset.bind(this);
-       this.choosePlayerO = this.choosePlayerO.bind(this);
-       this.choosePlayerX = this.choosePlayerX.bind(this);
-       this.startGame = this.startGame.bind(this);
+       this.copyBoard = this.copyBoard.bind(this);
+       this.minScore = this.minScore.bind(this);
+       this.maxScore = this.maxScore.bind(this);
+       this.findAIMove = this.findAIMove.bind(this);
     }
 
     
 
 gameLoop(event){
  let id = event.target.id;
- let board = this.state.grid.slice(0);
- let player = this.state._PLAYER;
- let moves = this.state.movesCounter;
+ let player = 'X'
+   
 
-
-    if(this.state.gameOver === false){
-
-            if(this.isMoveValid(board,id)){
-            board[id] = player;
-            this.setState({grid: board , movesCounter: moves + 1});
-            
-            
-            
-            if(this.checkWinner(board, player)){
-                
-                this.setState({
-                    gameOver: true,
-                    message : 'Player ' + player + ' wins'
-                });
-                return;
-            }
-            else if(this.draw(this.state.movesCounter, board, player)){
-                   
-                    this.setState({
-                    gameOver: true,
-                    message : 'Draw'
-                });
-                    return;
-            }
-            else{
-                this.setState({
-                    _PLAYER : this.state._PLAYER === 'X' ? 'O' : 'X'
-                });
-            
-            }
-        
+ if(this.state.winner === null){
+      // *************HUMAN PLAYER LOOP******************
+     let currentGameBoard = this.isMoveValid(this.state.grid ,id, player);
+    
+        if(this.checkWinner(currentGameBoard, player)){
+           
+            this.setState({
+                grid: currentGameBoard,
+                winner : player
+            });
+            return;
         }
+        if (this.draw(currentGameBoard)){
+           
+            this.setState({
+                grid: currentGameBoard,
+                winner : 'Draw'
+            });
+            return;
+        }
+        
+    //***********AI PLAYER*******************/
 
+    player = 'O';
+    currentGameBoard = this.isMoveValid(currentGameBoard, this.findAIMove(currentGameBoard), player);
+
+    if(this.checkWinner(currentGameBoard, player)){
+         this.setState({
+                grid: currentGameBoard,
+                winner : player
+            });
+            return;
+    }
+    if(this.draw(currentGameBoard)){
+         this.setState({
+                grid: currentGameBoard,
+                winner : 'Draw'
+            });
+            return;
     }
 
+    this.setState({
+        grid: currentGameBoard,
+
+    });
+ }
+  
+       
 
 }
 
- isMoveValid(board, id){
-    if(board[id] === ""){
-        return true;
+
+
+// MAKE MOVE FUNCTION .. TAKES IN A BOARD ,MOVE POSITION AND PLAYER
+// CHECKS IF MOVE POSITION IS BLANK 
+// IF BLANK , COPIES BOARD AND PUTS PLAYER IN NEW POSTION
+// RETURNS NEW BOARD
+// IF NOT BLANK , THEN JUST EXITS FUNCTION
+ isMoveValid(board, position, player){
+    let newBoard = this.copyBoard(board);
+    if(board[position] === ""){
+        
+        newBoard[position] = player;
+        return newBoard;
         }
     else{
-        return false;
+        return null;
         }
     }
 
+// CHECK FOR WINNER.. TAKES A BOARD AND PLAYER 
+// FOR LOOP THAT TAKES EACH ARRAY IN WINS ARRAY, THEN USE EACH NUMBER A POSITION TO CHECK ON OUR BOARD
+// IF PLAYER SYMBOL MATCHES THEN RETURN TRUE IF (WINNER)
 checkWinner(board, player){
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[2,4,6],[0,4,8]];
 
     for(let i = 0; i < wins.length; i++){
         let win = wins[i];
-        if(board[win[0]] === player && board[win[1]] === player && board[win[2]] === player){
-            
+        if(board[win[0]] === player && board[win[1]] === player && board[win[2]] === player) 
+           
+           {
             return true;
         }
-       
         
     }
    
 }
 
-draw(counter, board, player){
-    if(counter === 8 && this.checkWinner(board,player) === undefined ){
-        return true;
+// CHECK FOR DRAW FUNCTION , TAKES A COUNTER OF ALL MOVES MADE SO FAR, BOARD , PLAYER
+// IF COUNTER EQUALLS 8 AND CHECKWNNER FUNCTION RETURNS UNDEFINED THEN RETURN TRUE (DRAW)
+draw(board){
+    let counter = 0 ;
+
+    for(let i = 0 ; i < board.length; i++){
+        if(board[i] === ''){
+            counter++;
+        }
+
+        if(counter === 9){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
 }
-
+// RESET STATE TO DEFAULT
 reset(){
     this.setState(  {
             grid:["","","","","","","","","",], 
-            _PLAYER : 'X',
             movesCounter : 0,
-            gameOver : false,
-            choosePlayer : true
+            winner : null
         });
 }
 
-choosePlayerX(){
-    this.setState({
-        _PLAYER : 'X'
-    });
+copyBoard(board){
+   return board.slice(0);  
 }
 
-choosePlayerO(){
-    this.setState({
-        _PLAYER : 'O'
-    });
+
+findAIMove(board){
+        let bestMoveScore = 100;
+        let move = null;
+
+        if(this.checkWinner(board , 'X') || this.checkWinner(board, 'O') || this.draw(board)){
+            return null;
+        }
+
+        for(let i = 0; i < board.length; i++){
+            // newBoard will equal the board returned from valid move, which makes the move..
+            let newBoard = this.isMoveValid(board, i, this.state.minPlayer);
+            if(newBoard){
+                let moveScore = this.minScore(newBoard);
+                if(moveScore < bestMoveScore){
+                    bestMoveScore = moveScore;
+                    move = i;
+                }
+            }
+
+        }
+
+       return move;
 }
 
-startGame(){
-    this.setState({
-        choosePlayer : false
-    });
-}
+minScore(board){
+        if(this.checkWinner(board, 'X')){
+            return 10;
+        }
+         if(this.checkWinner(board, 'O')){
+                return -10;
+        }
+         if(this.draw(board)){
+            return 0;
+        }
+        else{
+           let bestMoveValue = 100;
+           let move = 0;
+            for(let i =0; i < board.length; i++){
+                let newBoard = this.isMoveValid(board, i,this.state.minPlayer);
+                if(newBoard){
+                    let predictedMoveValue = this.maxScore(newBoard);
+                    if(predictedMoveValue < bestMoveValue){
+                        bestMoveValue = predictedMoveValue;
+                        move = i;
+                    }
+                }
+            }
+            //console.log("Best Move Value(minScore):", bestMoveValue);
+            return bestMoveValue;
+        }
+    }
+
+maxScore(board){
+        if(this.checkWinner(board, 'X')){
+            return 10;
+        }
+         if(this.checkWinner(board, 'O')){
+                return -10;
+        }
+         if(this.draw(board)){
+            return 0;
+        }
+        else{
+           let bestMoveValue = -100;
+           let move= 0;
+            for(let i =0; i < board.length; i++){
+                let newBoard = this.isMoveValid(board, i,this.state.maxPlayer);
+                if(newBoard){
+                    let predictedMoveValue = this.minScore(newBoard);
+                    if(predictedMoveValue > bestMoveValue){
+                        bestMoveValue = predictedMoveValue;
+                        move = i;
+                    }
+                }
+            }
+            //console.log("Best Move Value(maxScore):", bestMoveValue);
+            return bestMoveValue;
+        }
+    }
+
+
+
 
 
   render() {
@@ -169,28 +272,11 @@ startGame(){
             </div>
             <div><Button bsStyle="success"  id="resetBtn" onClick={this.reset}>Reset</Button></div>
 
-            <div className="static-modal">
-            <Modal show={this.state.choosePlayer}>
-                <ModalHeader >
-                    <ModalTitle>Choose X or O</ModalTitle>
-                </ModalHeader>
-                <ModalBody>
-                    <Button className="xButton" bsStyle= "danger" onClick={this.choosePlayerX}>X</Button>
-                    <Button className="oButton" bsStyle="primary" onClick={this.choosePlayerO}>O</Button>
-                    <Button className="startButton" bsStyle="success" onClick={this.startGame}>Start Game</Button>
-                </ModalBody>
-            </Modal>
-             <Modal show={this.state.gameOver} onHide = {this.reset}>
-                <ModalHeader closeButton = "true">
-                    <ModalTitle>Game Over</ModalTitle>
-                </ModalHeader>
-                <ModalBody>
-                  {this.state.message}
-                </ModalBody>
-            </Modal>
-  </div>
            
-      </div>
+           
+        </div>
+           
+      
     );
   }
 }
