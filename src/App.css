@@ -35,6 +35,7 @@
 
 #resetBtn{
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #toggleDiv{
@@ -42,10 +43,11 @@
   margin-bottom: 20px;
 }
 
-.xButton{
-  margin: 0 20px;
+#xButton{
+  margin-right: 10px;
+  margin-left: 10px;
 }
 
-.startButton{
-  margin : 0 30px;
-}
+
+
+

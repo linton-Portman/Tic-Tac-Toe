@@ -5,7 +5,10 @@ import './App.css';
 import Button from '../node_modules/react-bootstrap/lib/Button';
 import Navbar from '../node_modules/react-bootstrap/lib/Navbar';
 
-
+import Modal from '../node_modules/react-bootstrap/lib/Modal';
+import ModalHeader from '../node_modules/react-bootstrap/lib/ModalHeader';
+import ModalBody from '../node_modules/react-bootstrap/lib/ModalBody';
+import ModalTitle from '../node_modules/react-bootstrap/lib/ModalTitle';
 
 class Board extends Component {
 
@@ -18,7 +21,11 @@ class Board extends Component {
                   " "," "," ",], 
             minPlayer : 'o',
             maxPlayer : 'x',
-            gameOver : false
+            gameOver : false,
+            player : 'x',
+            buttonVisible : false,
+            message : null,
+          
         }
 
 
@@ -31,16 +38,22 @@ class Board extends Component {
        this.maxScore = this.maxScore.bind(this);
        this.findAiMove = this.findAiMove.bind(this);
        this.reset = this.reset.bind(this);
+       this.playerChooseX = this.playerChooseX.bind(this);
+       this.playerChooseO = this.playerChooseO.bind(this);
+       
     }
 
 gameLoop(event){
-
-
+    // On Start of play disable the player choice buttons
+    this.setState({
+        buttonVisible : true
+    });
     
+    // Only make a move if the game is not over 
     if(this.state.gameOver === false){
-
+        // get id of box clicked , to use as a move position on board
          let id = event.target.id;
-         let player = 'x'
+         let player = this.state.player;
    
 
  
@@ -51,7 +64,8 @@ gameLoop(event){
            
             this.setState({
                 grid: currentGameBoard,
-                gameOver : true
+                gameOver : true,
+                message : player.toUpperCase() +' wins'
             });
             return;
         }
@@ -59,26 +73,30 @@ gameLoop(event){
            
             this.setState({
                 grid: currentGameBoard,
-                gameOver : true
+                gameOver : true,
+                message: 'Draw'
             });
             return;
         }
         
      //***********AI PLAYER*******************/
-     player = 'o';
+     player = this.state.player === 'x' ? 'o' : 'x';
+
      currentGameBoard = this.validMove( this.findAiMove(currentGameBoard), player , currentGameBoard);
 
         if(this.winner(currentGameBoard, player)){
             this.setState({
                     grid: currentGameBoard,
-                    gameOver : true
+                    gameOver : true,
+                    message : 'You Lose!'
                 });
                 return;
         }
         if(this.tie(currentGameBoard)){
             this.setState({
                     grid: currentGameBoard,
-                    gameOver : true
+                    gameOver : true,
+                    message: 'Draw'
                 });
                 return;
         }
@@ -89,15 +107,6 @@ gameLoop(event){
         });
     }
 }
-
-
- 
-  
-       
-
-
-
-
 
 // MAKE MOVE FUNCTION .. TAKES IN A BOARD ,MOVE POSITION AND PLAYER
 // CHECKS IF MOVE POSITION IS BLANK 
@@ -168,9 +177,9 @@ findAiMove(board) {
 }
 
 minScore(board) {
-  if (this.winner(board, 'x')) {
+  if (this.winner(board, this.state.maxPlayer)) {
     return 10;
-  } else if (this.winner(board, 'o')) {
+  } else if (this.winner(board, this.state.minPlayer)) {
     return -10;
   } else if (this.tie(board)) {
     return 0;
@@ -190,9 +199,9 @@ minScore(board) {
 }
 
 maxScore(board) {
-   if(this.winner(board, 'x')) {
+   if(this.winner(board, this.state.maxPlayer)) {
     return 10;
-  } else if(this.winner(board, 'o')) {
+  } else if(this.winner(board, this.state.minPlayer)) {
     return -10;
   } else if(this.tie(board)) {
     return 0;
@@ -216,9 +225,31 @@ reset(){
          grid:[" "," "," ",
                   " "," "," ",
                   " "," "," ",], 
-            gameOver : false
+            minPlayer : 'o',
+            maxPlayer : 'x',
+            gameOver : false,
+            player : 'x',
+            buttonVisible : false
     });
 }
+
+playerChooseX(){
+  this.setState({
+      player : 'x',
+      minPlayer: 'o',
+      maxPlayer : 'x'
+  });;
+}
+
+playerChooseO(){
+ this.setState({
+     player : 'o',
+     minPlayer : 'x',
+     maxPlayer: 'o'
+ });
+}
+
+
 
   render() {
 
@@ -235,19 +266,34 @@ reset(){
     return (
         <div>
 
-             <Navbar>
-                <Navbar.Header>
-                <Navbar.Brand>
-                    <a>Tic-Tac_Toe</a>
-                </Navbar.Brand>
-                </Navbar.Header>
-            </Navbar>
+                <Navbar>
+                    <Navbar.Header>
+                    <Navbar.Brand>
+                        <a>Tic-Tac_Toe</a>
+                    </Navbar.Brand>
+                    </Navbar.Header>
+                </Navbar>
+
+            <h4>You are : {this.state.player.toUpperCase()}</h4>
             
             <div className="boxcontainer">
                 {drawBoard}
             </div>
             <div><Button bsStyle="success"  id="resetBtn" onClick={this.reset}>Reset</Button></div>
-
+            <h4>Choose X or O</h4>
+            <div><Button disabled={this.state.buttonVisible} bsStyle="success"  id="xButton" onClick={this.playerChooseX}>X</Button>
+                 <Button disabled={this.state.buttonVisible} bsStyle="primary"  id="xButton" onClick={this.playerChooseO}>O</Button>
+            </div>
+                
+                <Modal show={this.state.gameOver} onHide = {this.reset}>
+                    <ModalHeader closeButton = "true">
+                        <ModalTitle>Game Over</ModalTitle>
+                    </ModalHeader>
+                    <ModalBody>
+                    {this.state.message}
+                    </ModalBody>
+                 </Modal>
+           
            
            
         </div>
