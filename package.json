@@ -19,5 +19,5 @@
     "eject": "react-scripts eject",
     "deploy": "npm run build&&gh-pages -d build"
   },
-  "homepage": "http://linton-portman.github.io/tic-tac-toe"
+  "homepage": "http://linton-portman.github.io/Tic-Tac-Toe"
 }
